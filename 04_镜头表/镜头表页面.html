@@ -1,0 +1,609 @@
+<title>《余额》镜头表</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* layout: one narrow column on a phone. A receipt-style summary on top, then one card per generated segment, grouped by act. */
+:root{
+  --bg:#f5f2fa; --surface:#ffffff; --paper:#fffdf7; --ink:#241f30; --muted:#665f76; --line:#e1d9ef;
+  --accent:#8a74d6; --accent-ink:#5943ab; --accent-soft:#ece6fb;
+  --m25-bg:#5943ab; --m25-fg:#ffffff; --fast-bg:#ece6fb; --fast-fg:#4c3d86;
+  --ok:#27805f; --ok-soft:#e1f3ea; --star:#a35a12; --star-soft:#fbefdc;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16131e; --surface:#201c2b; --paper:#262132; --ink:#ece8f5; --muted:#a9a1ba; --line:#372f49;
+    --accent:#a996ea; --accent-ink:#cbbdf8; --accent-soft:#2d2643;
+    --m25-bg:#a996ea; --m25-fg:#1a1528; --fast-bg:#2d2643; --fast-fg:#cbbdf8;
+    --ok:#6fcfa8; --ok-soft:#1d3a30; --star:#f0b46a; --star-soft:#3b2c18; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16131e; --surface:#201c2b; --paper:#262132; --ink:#ece8f5; --muted:#a9a1ba; --line:#372f49;
+  --accent:#a996ea; --accent-ink:#cbbdf8; --accent-soft:#2d2643;
+  --m25-bg:#a996ea; --m25-fg:#1a1528; --fast-bg:#2d2643; --fast-fg:#cbbdf8;
+  --ok:#6fcfa8; --ok-soft:#1d3a30; --star:#f0b46a; --star-soft:#3b2c18; color-scheme: dark;
+}
+*{ box-sizing:border-box }
+body{ background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.65; -webkit-text-size-adjust:100% }
+.wrap{ max-width:720px; margin:0 auto; padding-block:20px 56px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); display:flex; flex-direction:column; gap:30px }
+h1,h2,h3,p,ol,ul{ margin:0 }
+h2{ font-size:21px; line-height:1.3; text-wrap:balance }
+h3{ font-size:17px; line-height:1.35 }
+section{ display:flex; flex-direction:column; gap:14px; min-width:0 }
+.sub{ color:var(--muted); font-size:15px }
+a{ color:var(--accent-ink) }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+
+/* the summary, set like a till receipt */
+.ticket{ background:var(--paper); border-top:2px dashed var(--line); border-bottom:2px dashed var(--line); padding:20px 18px; display:flex; flex-direction:column; gap:14px }
+.ticket .brand{ font-family:var(--mono); font-size:13px; letter-spacing:.14em; color:var(--muted) }
+.ticket h1{ font-size:28px; line-height:1.2; letter-spacing:.02em }
+.rows{ display:flex; flex-direction:column; gap:6px; font-size:15px }
+.row{ display:flex; gap:10px; align-items:baseline; min-width:0 }
+.row .k{ color:var(--muted); flex:none }
+.row .dots{ flex:1; border-bottom:1px dotted var(--muted); opacity:.5; transform:translateY(-4px); min-width:12px }
+.row .v{ font-variant-numeric:tabular-nums; text-align:right }
+.meter{ display:flex; flex-direction:column; gap:6px }
+.meter .label{ font-size:15px }
+.meter .label b{ font-family:var(--mono); font-size:19px }
+.track{ height:8px; border-radius:99px; background:var(--accent-soft); overflow:hidden }
+.track i{ display:block; height:100%; width:0; background:var(--accent); border-radius:99px; transition:width .25s }
+@media (prefers-reduced-motion: reduce){ .track i{ transition:none } }
+
+nav{ display:flex; flex-wrap:wrap; gap:8px }
+nav a{ text-decoration:none; font-size:14px; padding:6px 12px; border:1px solid var(--line); border-radius:99px; background:var(--surface); color:var(--ink) }
+
+ol.steps{ padding-left:1.3em; display:flex; flex-direction:column; gap:6px }
+ul.plain{ padding-left:1.2em; display:flex; flex-direction:column; gap:6px }
+
+.act{ display:flex; align-items:center; gap:12px; margin-top:6px }
+.act h3{ flex:none; color:var(--accent-ink) }
+.act::after{ content:""; flex:1; border-top:1px solid var(--line) }
+
+.card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:12px; min-width:0 }
+.card.is-done{ border-color:var(--ok) }
+.head{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px }
+.head h3{ flex:1 1 auto; min-width:0 }
+.no{ font-family:var(--mono); color:var(--accent-ink); margin-right:6px }
+.tags{ display:flex; flex-wrap:wrap; gap:6px }
+.tag{ font-size:12.5px; line-height:1; padding:5px 8px; border-radius:6px; background:var(--fast-bg); color:var(--fast-fg); white-space:nowrap; font-variant-numeric:tabular-nums }
+.tag.m25{ background:var(--m25-bg); color:var(--m25-fg); font-weight:600 }
+.tag.star{ background:var(--star-soft); color:var(--star); font-weight:600 }
+.tag.plain{ background:transparent; border:1px solid var(--line); color:var(--muted) }
+.where{ font-size:14px; color:var(--muted); font-variant-numeric:tabular-nums }
+.says{ display:flex; flex-direction:column; gap:8px; border-left:3px solid var(--accent-soft); padding-left:12px }
+.say .en{ font-family:var(--mono); font-size:14.5px; overflow-wrap:anywhere }
+.say .zh{ font-size:14px; color:var(--muted) }
+.say .who{ font-size:12.5px; color:var(--accent-ink); margin-right:6px }
+.refs{ font-size:14.5px }
+.refs ol{ margin:4px 0 0; padding-left:1.4em }
+.lbl{ font-size:13px; color:var(--muted) }
+.copyrow{ display:flex; flex-wrap:wrap; align-items:center; gap:10px }
+button.copy{ font:inherit; font-size:15px; font-weight:600; padding:10px 16px; border-radius:10px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent-ink); cursor:pointer }
+button.copy.ok{ background:var(--ok-soft); border-color:var(--ok); color:var(--ok) }
+.state{ font-size:14px; color:var(--ok) }
+details{ border-top:1px solid var(--line); padding-top:10px }
+summary{ cursor:pointer; font-size:14.5px; color:var(--accent-ink) }
+pre{ margin:10px 0 0; padding:12px; background:var(--bg); border-radius:10px; font-family:var(--mono); font-size:13.5px; line-height:1.65; white-space:pre-wrap; overflow-wrap:anywhere; max-width:100% }
+.note{ font-size:14.5px }
+.note b{ font-weight:600; margin-right:6px }
+.tick{ display:inline-flex; align-items:center; gap:8px; font-size:14.5px; cursor:pointer; padding:4px 0 }
+.tick input{ width:20px; height:20px; accent-color:var(--ok) }
+
+.pairs{ display:flex; flex-direction:column; gap:0 }
+.pair{ display:flex; flex-direction:column; gap:2px; padding:10px 0; border-bottom:1px solid var(--line) }
+.pair:last-child{ border-bottom:0 }
+.pair .tagline{ font-size:12.5px; color:var(--accent-ink) }
+.pair .en{ font-family:var(--mono); font-size:14.5px; overflow-wrap:anywhere }
+.pair .zh{ font-size:14.5px; color:var(--muted) }
+.scroll{ overflow-x:auto; max-width:100% }
+table{ border-collapse:collapse; width:100%; font-size:14.5px; font-variant-numeric:tabular-nums }
+th,td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top }
+th{ font-weight:600; color:var(--muted); font-size:13px }
+td.n{ font-family:var(--mono); white-space:nowrap }
+</style>
+<div class="wrap">
+<header class="ticket">
+<div class="brand">BALANCE · SHOT LIST</div>
+<h1>《余额》镜头表</h1>
+<div class="rows">
+<div class="row"><span class="k">成片</span><span class="dots"></span><span class="v">约 2 分 55 秒</span></div>
+<div class="row"><span class="k">要生成</span><span class="dots"></span><span class="v">19 段</span></div>
+<div class="row"><span class="k">Seedance 2.5</span><span class="dots"></span><span class="v">10 段</span></div>
+<div class="row"><span class="k">Seedance 2.0 Fast</span><span class="dots"></span><span class="v">9 段</span></div>
+<div class="row"><span class="k">配音</span><span class="dots"></span><span class="v">英文</span></div>
+<div class="row"><span class="k">字幕和画面里的字</span><span class="dots"></span><span class="v">后期加，英中双语</span></div>
+<div class="row"><span class="k">每段只拍一遍的额度</span><span class="dots"></span><span class="v">24.6%</span></div>
+</div>
+<div class="meter"><div class="label">已通过 <b id="done-n">0</b> / 19 段</div><div class="track"><i id="done-bar"></i></div></div>
+</header>
+<nav aria-label="目录"><a href="#prep">先补三张图</a><a href="#shots">19 段提示词</a><a href="#text">画面里的字</a><a href="#lines">台词</a><a href="#music">配乐</a><a href="#budget">额度</a><a href="#send">怎么发文件</a></nav>
+<section><h2>怎么用</h2>
+<ol class="steps">
+<li>先在 ChatGPT 里补三张图，见下一节。</li>
+<li>在豆包里新开一条消息，按卡片上的顺序上传参考图，点"复制提示词"粘进去发送。</li>
+<li>生成完把视频原文件发给 Claude。通过了，回这页把那一段勾上。</li>
+</ol>
+<p class="sub">每段提示词都写了"不要背景音乐、不要字幕、不要文字"。音乐、字幕和小票上的字都在后期统一加。</p></section>
+<section><h2>和剧本初稿不一样的四处</h2>
+<ul class="plain">
+<li>开场不再用手指点屏幕上的"是"，改成按那个淡紫色的实体大按键。</li>
+<li>黑猫的胸牌不写"夜班"，是一张带月牙图标的工牌。</li>
+<li>尾声里猫不推泡面了，改成它自己用爪子按按键，机器吐出泡面的账单。泡面在收银机另一侧，猫够不着；按键这个动作全片出现三次，正好收尾。</li>
+<li>台词是英文，小票和屏幕上的字是英中双语。</li>
+</ul></section>
+<section id="prep"><h2>先补三张图</h2><p class="sub">在生成定妆图的那个 ChatGPT 对话里接着发。发的时候带上道具图、柜台图、阿哲设定图和合成定妆照。</p>
+<article class="card"><div class="head"><h3><span class="no">补充图 1</span>小票特写</h3></div><p class="note">所有小票的字都加在这张图上，第 11 段也用它。</p><div class="copyrow"><button type="button" class="copy" id="btn-plate-1" data-target="plate-1">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="plate-1">按同样的统一风格，生成一张&quot;小票特写&quot;的空镜，横版 16:9，画面里没有人和动物。
+
+机位：从正上方略偏顾客一侧俯拍柜台台面，特写。
+内容：画面最上方露出自助收银机斜面的下沿和那条贴近台面的出票口（奶白色机身，和道具图一致）。一条细长的白色空白小票从出票口伸出来，笔直地朝画面下方铺在浅木色台面上，一直延伸到画面底部之外。小票完全平整、完全空白，宽度占画面的三分之一左右，居中。台面上没有别的东西。
+光线：头顶暖黄色灯光，小票上有柔和的光，边缘有淡淡的影子。小票上没有任何文字、图案和折痕。</pre></details></article>
+<article class="card"><div class="head"><h3><span class="no">补充图 2</span>屏幕特写</h3></div><p class="note">第 1 段用它，屏幕上的字也加在这张图的屏幕位置。</p><div class="copyrow"><button type="button" class="copy" id="btn-plate-2" data-target="plate-2">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="plate-2">按同样的统一风格，生成一张&quot;收银机屏幕特写&quot;的空镜，横版 16:9，画面里没有人和动物。
+
+机位：正对自助收银机的正面，特写，镜头和屏幕平行。
+内容：道具图里的那台奶白色自助收银机。屏幕在画面上半部，亮着柔和的白光、完全空白；画面下半部是斜面上的淡紫色大圆按键，按键完整露出来。背景是虚化的暖色货架。
+屏幕上没有任何文字、图标和倒影里的图案。</pre></details></article>
+<article class="card"><div class="head"><h3><span class="no">补充图 3</span>阿哲近景</h3></div><p class="note">6 段近景都用它定构图，这样每段的背景和光线才一致。</p><div class="copyrow"><button type="button" class="copy" id="btn-plate-3" data-target="plate-3">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="plate-3">只以阿哲设定图和合成定妆照为准。按同样的统一风格，生成一张阿哲的近景定妆照，横版 16:9。
+
+画面：还是那家深夜便利店，阿哲站在柜台前。近景，胸部以上，他在画面中间偏左，身体和脸朝向画面右侧，是四分之三侧脸。他低头看着手里举在胸前的一张空白小票，表情疲惫、无语。背景是虚化的青色冰柜和暖色货架。
+造型严格按设定图：大头、M 形高发际线、头顶翘起的一撮头发、耷拉的半睁眼、下巴上很淡的胡茬影子、深灰色连帽卫衣、蓝色挂绳、黑色双肩包的肩带。工牌在画面下沿之外。
+光线：头顶暖黄色主光，脸部受光柔和，身后有冰柜的青色冷光勾边。浅景深。画面里没有任何文字。</pre></details></article>
+</section>
+<section><h2>先拍这 4 段</h2><p class="sub">它们分别验证四件事：双人对话、近景表演、猫推杯子、打电话。这 4 段过了，其余 15 段就是照着做。4 段只拍一遍约占一周额度的 6.3%。</p><ul class="plain"><li><a href="#s02">第 02 段 · 开场双人</a></li><li><a href="#s04">第 04 段 · 摸头</a></li><li><a href="#s08">第 08 段 · 猫推杯子</a></li><li><a href="#s13">第 13 段 · 这周末回去</a></li></ul></section>
+<section id="shots"><h2>19 段提示词</h2><p class="sub">阿哲有台词或表情变化的段用 Seedance 2.5，其余用 2.0 Fast。时长和模型都写在提示词第一行里了。</p>
+<div class="act"><h3>一、开场</h3></div>
+<article class="card" id="s01"><div class="head"><h3><span class="no">01</span>按下按键</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">5 秒</span></div></div><p class="where">成片位置 0:00–0:04 · 约占一周额度 0.58%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>屏幕特写（补充图 2）</li><li>道具图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-01" data-target="p-01">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-01">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，机位和光线以它为准。图2 是道具图，收银机的造型以它为准。
+
+【镜头】特写，正对收银机正面：屏幕在画面上半部，淡紫色大圆按键在画面下半部。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：屏幕亮着、完全空白。一只手从画面下方伸进来，深灰色卫衣的袖口盖住半个手掌，食指悬在淡紫色大按键上方，犹豫了一下。
+2–4 秒：食指按下按键，按键陷下去再弹起来。
+4–5 秒：手收回，退出画面。
+手始终在画面下半部，不要挡住屏幕。屏幕全程保持空白。
+
+【声音】按键&quot;咔哒&quot;一声，紧接着收银机&quot;嘀&quot;一声。环境声：深夜便利店里冰柜的低鸣。没有人说话。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。不要出现人的脸和身体。只出现一只手，手指数量正常。</pre></details><p class="note"><b>后期由 Claude 加</b>屏幕上的字：CHECK YOUR BALANCE? / 是否查询余额？</p><p class="note"><b>发出去之前看一眼</b>手没有挡住屏幕，屏幕全程空白。</p><label class="tick"><input type="checkbox" id="done-01" data-seg="01"><span>这段已通过</span></label></article>
+<article class="card" id="s02"><div class="head"><h3><span class="no">02</span>开场双人</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span><span class="tag star">先拍</span></div></div><p class="where">成片位置 0:07–0:17 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>...Don&#x27;t remind me.</div><div class="zh">……不用提醒。</div></div><div class="say"><div class="en"><span class="who">阿哲</span>What kind of balance is this machine even checking?</div><div class="zh">你们这机器，查的是哪门子余额？</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>合成定妆照</li><li>阿哲设定图</li><li>黑猫设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-02" data-target="p-02">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-02">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是场景和构图参考，机位、角色位置、道具位置、光线都以它为准。图2 是阿哲的设定图，图3 是黑猫的设定图，两个角色的长相、比例、服装和配饰全程和设定图一致。
+
+【镜头】中景，和图1 同一个机位。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–3 秒：阿哲低头看着手里那张空白小票，叹了一口气，小声嘟囔：&quot;...Don&#x27;t remind me.&quot;
+3–4 秒：他把小票放到台面上。
+4–7 秒：他抬起头，转向右边的黑猫，用疲惫、无奈、带一点冷幽默的语气问：&quot;What kind of balance is this machine even checking?&quot; 说的时候不要笑。
+7–10 秒：黑猫不回答，只是慢慢眨了一下眼，尾巴尖轻轻晃了一下。阿哲等了两秒，无奈地撇了撇嘴。收银机不出票、不出声。
+
+【声音】只有阿哲这两句英文台词。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。小票、收银机屏幕、阿哲的工牌都保持空白，猫的工牌上只有月牙图标。黑猫不说话、不张嘴。角色的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>左下角的时间 23:47；片名 BALANCE 余额。</p><p class="note"><b>发出去之前看一眼</b>两句都说了，说第二句时没有笑，镜头没有动。</p><label class="tick"><input type="checkbox" id="done-02" data-seg="02"><span>这段已通过</span></label></article>
+<article class="card" id="s03"><div class="head"><h3><span class="no">03</span>手机亮了</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">5 秒</span></div></div><p class="where">成片位置 0:17–0:19 · 约占一周额度 0.58%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>道具图</li><li>柜台图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-03" data-target="p-03">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-03">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是道具图，手机和泡面桶的造型以它为准。图2 是场景参考，台面的材质和光线以它为准。
+
+【镜头】特写，略高于台面的斜俯视角。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：那部深灰色手机背面朝上扣在浅木色柜台台面上，一动不动。画面边缘能看到红白泡面桶的一角。
+2–4 秒：手机轻轻震动了两下，屏幕朝下的那一圈边缘漏出白光，亮了一下又暗下去。
+4–5 秒：恢复安静。没有人碰它，画面里没有手。
+
+【声音】手机在木头台面上震动的&quot;嗡嗡&quot;声，两下。环境声：深夜便利店里冰柜的低鸣。没有人说话。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。不要出现人的脸和身体。手机背面没有任何标志，只有一个小圆镜头。不要出现动物。</pre></details><p class="note"><b>后期由 Claude 加</b>不用加字。</p><p class="note"><b>发出去之前看一眼</b>手机背面没有冒出标志。</p><label class="tick"><input type="checkbox" id="done-03" data-seg="03"><span>这段已通过</span></label></article>
+<div class="act"><h3>二、好笑的余额</h3></div>
+<article class="card" id="s04"><div class="head"><h3><span class="no">04</span>摸头</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span><span class="tag star">先拍</span></div></div><p class="where">成片位置 0:22–0:26、0:28–0:32 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>You keep track of that, too?</div><div class="zh">这也归你们管？</div></div><div class="say"><div class="en"><span class="who">阿哲</span>That many? Then I&#x27;m good for another year.</div><div class="zh">这么多？那我还能再干一年。</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>阿哲近景（补充图 3）</li><li>阿哲设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-04" data-target="p-04">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-04">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，景别、背景、光线都以它为准。图2 是阿哲的设定图，长相、比例、服装以它为准。
+
+【镜头】近景，阿哲胸部以上，面向画面右侧的四分之三侧脸，背景是虚化的青色冰柜和暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：阿哲低头看着手里举在胸前的空白小票，愣了一下。
+2–4.5 秒：他下意识抬起另一只手摸了摸自己偏高的发际线，不太服气地说：&quot;You keep track of that, too?&quot;
+4.5–6 秒：画面外的收银机&quot;嘀&quot;了一声，他朝画面右下方瞥了一眼。
+6–9 秒：他把目光收回到手里的小票上，眉毛一挑，带着苦笑说：&quot;That many? Then I&#x27;m good for another year.&quot;
+9–10 秒：保持这个表情。
+
+【声音】只有阿哲这两句英文台词。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。4.5 秒处有一声画面外的&quot;嘀&quot;。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里只有阿哲一个人，不要出现黑猫。画面里不要出现任何文字、数字、字幕、水印，小票和工牌保持空白。阿哲的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>中间插两张小票：头发 71%、还能熬的夜 302。</p><p class="note"><b>发出去之前看一眼</b>摸了发际线；两句都说了。</p><label class="tick"><input type="checkbox" id="done-04" data-seg="04"><span>这段已通过</span></label></article>
+<article class="card" id="s05"><div class="head"><h3><span class="no">05</span>回头听</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 0:38–0:40、0:44–0:48 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>...Later.</div><div class="zh">……回头听。</div></div><div class="say"><div class="en"><span class="who">阿哲</span>Okay. Rude.</div><div class="zh">行了，嘴挺损。</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>阿哲近景（补充图 3）</li><li>阿哲设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-05" data-target="p-05">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-05">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，景别、背景、光线都以它为准。图2 是阿哲的设定图，长相、比例、服装以它为准。
+
+【镜头】近景，阿哲胸部以上，面向画面右侧的四分之三侧脸，背景是虚化的青色冰柜和暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–1.5 秒：阿哲低头看着手里的空白小票。
+1.5–4 秒：他的目光往画面右下方瞟了一眼（那里是台面上扣着的手机），停了一下，移开视线，很小声地说：&quot;...Later.&quot;
+4–5.5 秒：画面外的收银机又&quot;嘀&quot;了一声，他低头看手里的小票。
+5.5–8 秒：他像被噎了一下，把小票慢慢揉成一团，面无表情地说：&quot;Okay. Rude.&quot;
+8–10 秒：他把纸团塞进卫衣口袋，手落到画面下方。
+
+【声音】只有阿哲这两句英文台词。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。4 秒处有一声画面外的&quot;嘀&quot;。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里只有阿哲一个人，不要出现黑猫。画面里不要出现任何文字、数字、字幕、水印，小票和工牌保持空白。阿哲的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>中间插两张小票：未读语音 3 条、&quot;回头&quot;额度已透支。</p><p class="note"><b>发出去之前看一眼</b>&quot;Later.&quot; 说得很轻；把小票揉了。</p><label class="tick"><input type="checkbox" id="done-05" data-seg="05"><span>这段已通过</span></label></article>
+<article class="card" id="s06"><div class="head"><h3><span class="no">06</span>猫的反应</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">5 秒</span></div></div><p class="where">成片位置 0:32–0:34、1:34–1:36 · 约占一周额度 0.58%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>黑猫设定图</li><li>合成定妆照</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-06" data-target="p-06">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-06">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是黑猫的设定图，造型以它为准。图2 是场景参考，黑猫坐的位置、收银机、咖啡杯和光线以它为准。
+
+【镜头】近景，黑猫全身，端坐在柜台上。画面左边露出半台收银机，右边是那只白色带淡紫色杯套的咖啡杯，背景是虚化的暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–5 秒：黑猫面无表情地盯着画面左侧（那里站着一个画面外的人）。它的尾巴尖慢慢晃了一下，耳朵轻轻抖了一下，然后非常缓慢地眨了一次眼。除此之外一动不动。
+
+【声音】没有人说话。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里没有人。画面里不要出现任何文字、数字、字幕、水印，收银机屏幕和小票保持空白，猫的工牌上只有月牙图标。黑猫不张嘴、不出声，造型全程和设定图一致。</pre></details><p class="note"><b>后期由 Claude 加</b>不用加字。这段会剪成两三个反应镜头反复用。</p><p class="note"><b>发出去之前看一眼</b>猫没有张嘴，工牌上的月牙没有变形。</p><label class="tick"><input type="checkbox" id="done-06" data-seg="06"><span>这段已通过</span></label></article>
+<article class="card" id="s07"><div class="head"><h3><span class="no">07</span>拿泡面要走</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">5 秒</span></div></div><p class="where">成片位置 0:48–0:51 · 约占一周额度 0.58%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>合成定妆照</li><li>阿哲设定图</li><li>黑猫设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-07" data-target="p-07">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-07">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是场景和构图参考，机位、角色位置、道具位置、光线都以它为准。图2 是阿哲的设定图，图3 是黑猫的设定图，两个角色的长相、比例、服装和配饰全程和设定图一致。
+
+【镜头】中景，和图1 同一个机位。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：阿哲摇了摇头，伸手拿起台面上那桶红白泡面。
+2–4 秒：他另一只手伸向台面上扣着的手机，身体已经开始往画面左侧转，准备离开。
+4–5 秒：他的手还没碰到手机，动作停在半空。黑猫全程端坐不动，盯着他。
+
+【声音】没有人说话。泡面桶被拿起的一点轻响。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。小票、收银机屏幕、阿哲的工牌都保持空白，猫的工牌上只有月牙图标。黑猫不说话、不张嘴。角色的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>不用加字。</p><p class="note"><b>发出去之前看一眼</b>泡面拿起来了，手机还在台面上。</p><label class="tick"><input type="checkbox" id="done-07" data-seg="07"><span>这段已通过</span></label></article>
+<div class="act"><h3>三、转折</h3></div>
+<article class="card" id="s08"><div class="head"><h3><span class="no">08</span>猫推杯子</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">5 秒</span><span class="tag star">先拍</span></div></div><p class="where">成片位置 0:51–0:56 · 约占一周额度 0.58%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>道具图</li><li>黑猫设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-08" data-target="p-08">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-08">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是道具图，收银机和咖啡杯的造型以它为准。图2 是黑猫的设定图，猫爪和毛色以它为准。
+
+【镜头】特写，贴近台面高度的平视角度。画面左半边是收银机下半部分的斜面和斜面上的淡紫色大圆按键，画面右半边是那只白色带淡紫色杯套的咖啡杯，立在浅木色台面上。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：一只黑色的猫爪从画面右侧慢慢伸进来，搭在咖啡杯的侧面。
+2–4 秒：猫爪一点一点地把杯子往左推，杯子慢慢倾斜，朝收银机倒下去。
+4–5 秒：杯盖的边缘正好磕在淡紫色大按键上，把按键压了下去。杯盖没有掉，咖啡一滴都没有洒。
+画面里只出现猫的一只前爪，不出现猫的脸。
+
+【声音】纸杯倒下的一声闷响，按键&quot;咔哒&quot;，紧接着收银机&quot;嘀&quot;一声。环境声：深夜便利店里冰柜的低鸣。没有人说话。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。不要出现人的脸和身体。只出现一只黑色猫爪。</pre></details><p class="note"><b>后期由 Claude 加</b>不用加字。</p><p class="note"><b>发出去之前看一眼</b>杯子是被猫爪推倒的，并且碰到了淡紫色按键。</p><label class="tick"><input type="checkbox" id="done-08" data-seg="08"><span>这段已通过</span></label></article>
+<article class="card" id="s09"><div class="head"><h3><span class="no">09</span>什么 21 次</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 1:00–1:08 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>Twenty-one what?</div><div class="zh">什么 21 次？</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>合成定妆照</li><li>阿哲设定图</li><li>黑猫设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-09" data-target="p-09">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-09">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是场景和构图参考，机位、角色位置、道具位置、光线都以它为准。图2 是阿哲的设定图，图3 是黑猫的设定图，两个角色的长相、比例、服装和配饰全程和设定图一致。
+
+【镜头】中景，和图1 同一个机位。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–3 秒：阿哲一手拿着泡面桶，另一只手从收银机的出票口撕下一张空白小票，低头看。
+3–6 秒：他皱起眉，抬头看向黑猫，不解地问：&quot;Twenty-one what?&quot;
+6–10 秒：黑猫不回答，只是看着他。收银机&quot;嘀&quot;了一声，又开始往外吐小票，这次吐得很长。阿哲低头看着小票一点点变长。
+
+【声音】只有阿哲这一句英文台词。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。6 秒后有&quot;嘀&quot;声和连续的打印声。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。小票、收银机屏幕、阿哲的工牌都保持空白，猫的工牌上只有月牙图标。黑猫不说话、不张嘴。角色的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>前面插小票：回家吃饭 · 剩余 21 次。后面插长小票：四行算式。</p><p class="note"><b>发出去之前看一眼</b>问的时候是皱眉，不是笑。</p><label class="tick"><input type="checkbox" id="done-09" data-seg="09"><span>这段已通过</span></label></article>
+<article class="card" id="s10"><div class="head"><h3><span class="no">10</span>一百岁，四十顿</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 1:16–1:22、1:25–1:30 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>No way. My mom&#x27;s healthy. She&#x27;ll live to a hundred.</div><div class="zh">不可能，我妈身体好着呢，她能活到一百岁。</div></div><div class="say"><div class="en"><span class="who">阿哲</span>...Forty dinners.</div><div class="zh">……四十顿。</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>阿哲近景（补充图 3）</li><li>阿哲设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-10" data-target="p-10">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-10">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，景别、背景、光线都以它为准。图2 是阿哲的设定图，长相、比例、服装以它为准。
+
+【镜头】近景，阿哲胸部以上，面向画面右侧的四分之三侧脸，背景是虚化的青色冰柜和暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–1 秒：阿哲看着手里一张长长的空白小票。
+1–5 秒：他先是不服气地笑了一下，摇摇头，说：&quot;No way. My mom&#x27;s healthy. She&#x27;ll live to a hundred.&quot;
+5–6.5 秒：画面外的收银机&quot;嘀&quot;了一声，他低头看小票。
+6.5–9 秒：他脸上的笑慢慢僵住、消失。他嘴唇动了动，很轻、很慢地念出来：&quot;...Forty dinners.&quot;
+9–10 秒：他沉默着，喉结动了一下，眼睛盯着小票。
+
+【声音】只有阿哲这两句英文台词。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。第二句比第一句轻很多，几乎是气声。5 秒处有一声画面外的&quot;嘀&quot;。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里只有阿哲一个人，不要出现黑猫。画面里不要出现任何文字、数字、字幕、水印，小票和工牌保持空白。阿哲的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>中间插小票：(100 − 60) × 1 = 40。</p><p class="note"><b>发出去之前看一眼</b>第二句明显变轻，笑容收住了。</p><label class="tick"><input type="checkbox" id="done-10" data-seg="10"><span>这段已通过</span></label></article>
+<div class="act"><h3>四、高潮</h3></div>
+<article class="card" id="s11"><div class="head"><h3><span class="no">11</span>猫爪按住小票</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">5 秒</span></div></div><p class="where">成片位置 1:30–1:34 · 约占一周额度 0.58%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>小票特写（补充图 1）</li><li>黑猫设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-11" data-target="p-11">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-11">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，机位、小票的位置和光线都以它为准。图2 是黑猫的设定图，猫爪和毛色以它为准。
+
+【镜头】俯拍特写，和图1 同一个机位。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：空白小票平铺在台面上，一动不动。
+2–4 秒：一只黑色的猫爪从画面右侧慢慢伸进来，轻轻按在小票的右侧边缘上，停住。
+4–5 秒：猫爪保持不动。小票全程空白。
+画面里只出现猫的一只前爪。
+
+【声音】非常安静，只有冰柜的低鸣和猫爪落在纸上的一点轻响。没有人说话。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。不要出现人的脸和身体。只出现一只黑色猫爪。</pre></details><p class="note"><b>后期由 Claude 加</b>小票上的算式，猫爪旁边的&quot;× 1&quot;变成淡紫色。</p><p class="note"><b>发出去之前看一眼</b>猫爪落下后没有再动。</p><label class="tick"><input type="checkbox" id="done-11" data-seg="11"><span>这段已通过</span></label></article>
+<article class="card" id="s12"><div class="head"><h3><span class="no">12</span>拨电话</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 1:36–1:46 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">妈妈</span>Hello? Why are you calling so late? Is something wrong?</div><div class="zh">喂？怎么这么晚打电话，出什么事了？</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>阿哲近景（补充图 3）</li><li>阿哲设定图</li><li>道具图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-12" data-target="p-12">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-12">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，景别、背景、光线都以它为准。图2 是阿哲的设定图，长相、比例、服装以它为准。图3 是道具图，手机的造型以它为准。
+
+【镜头】近景，阿哲胸部以上，面向画面右侧的四分之三侧脸，背景是虚化的青色冰柜和暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：阿哲从画面下方把手机拿上来，低头看着屏幕。屏幕朝向他自己，镜头只能看到手机的背面。他的拇指悬了一下，按了下去。
+2–4 秒：他把手机举到远离镜头一侧的耳朵边，脸完全露出来。
+4–5.5 秒：听筒里&quot;嘟——&quot;只响了一声，就接通了。
+5.5–9.5 秒：手机里传出妈妈的声音：&quot;Hello? Why are you calling so late? Is something wrong?&quot; 阿哲听着，嘴唇抿紧，眼睛看着下方，没有马上回答。
+9.5–10 秒：保持。
+
+【声音】阿哲这一段不说话。妈妈的声音从手机听筒里传出来：60 岁左右的女声，温和，带一点刚被吵醒的沙哑和担心，音量比阿哲小，有电话听筒的音质，美式英语。4 秒处有一声拨号音。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里只有阿哲一个人，不要出现黑猫。画面里不要出现任何文字、数字、字幕、水印，小票和工牌保持空白。阿哲的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。手机屏幕始终不朝向镜头。</pre></details><p class="note"><b>后期由 Claude 加</b>只加字幕。</p><p class="note"><b>发出去之前看一眼</b>手机在远离镜头的那只耳朵边，脸没被挡住；妈妈的声音像是从电话里传出来的。</p><label class="tick"><input type="checkbox" id="done-12" data-seg="12"><span>这段已通过</span></label></article>
+<article class="card" id="s13"><div class="head"><h3><span class="no">13</span>这周末回去</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span><span class="tag star">先拍</span></div></div><p class="where">成片位置 1:46–1:56 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>Nothing. ...Mom, I&#x27;m coming home for dinner this weekend.</div><div class="zh">没事。……妈，这周末我回去吃饭。</div></div><div class="say"><div class="en"><span class="who">妈妈</span>...Then I&#x27;ll go buy ribs tomorrow.</div><div class="zh">……那我明天去买排骨。</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>阿哲近景（补充图 3）</li><li>阿哲设定图</li><li>道具图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-13" data-target="p-13">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-13">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，景别、背景、光线都以它为准。图2 是阿哲的设定图，长相、比例、服装以它为准。图3 是道具图，手机的造型以它为准。
+
+【镜头】近景，阿哲胸部以上，面向画面右侧的四分之三侧脸，手机举在远离镜头一侧的耳朵边，脸完全露出来。背景是虚化的青色冰柜和暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–1.5 秒：阿哲把手机贴在耳边，吸了一口气。
+1.5–5.5 秒：他尽量用平常的语气说：&quot;Nothing.&quot; 停顿一秒，喉结动了一下，接着说：&quot;Mom, I&#x27;m coming home for dinner this weekend.&quot;
+5.5–7.5 秒：电话那头安静了两秒。他一动不动地听着，眼眶慢慢发红。
+7.5–10 秒：手机里传出妈妈的声音，比刚才慢，有一点哽：&quot;...Then I&#x27;ll go buy ribs tomorrow.&quot; 他听完，垂下眼睛，嘴角动了一下。
+他眼里有水光，但眼泪不要流下来。
+
+【声音】阿哲一句，妈妈一句。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。妈妈的声音从手机听筒里传出来：60 岁左右的女声，温和，带一点刚被吵醒的沙哑和担心，音量比阿哲小，有电话听筒的音质，美式英语。5.5–7.5 秒完全安静，只有冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里只有阿哲一个人，不要出现黑猫。画面里不要出现任何文字、数字、字幕、水印，小票和工牌保持空白。阿哲的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。手机屏幕始终不朝向镜头。</pre></details><p class="note"><b>后期由 Claude 加</b>只加字幕。这是全片最重要的一段。</p><p class="note"><b>发出去之前看一眼</b>中间那两秒停顿在；眼眶红了但没有掉泪。</p><label class="tick"><input type="checkbox" id="done-13" data-seg="13"><span>这段已通过</span></label></article>
+<article class="card" id="s14"><div class="head"><h3><span class="no">14</span>每个月都回</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 1:56–2:06 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>Yeah. I&#x27;ll come home every month from now on.</div><div class="zh">嗯。以后我每个月都回。</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>阿哲近景（补充图 3）</li><li>阿哲设定图</li><li>道具图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-14" data-target="p-14">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-14">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，景别、背景、光线都以它为准。图2 是阿哲的设定图，长相、比例、服装以它为准。图3 是道具图，手机的造型以它为准。
+
+【镜头】近景，阿哲胸部以上，面向画面右侧的四分之三侧脸，手机举在远离镜头一侧的耳朵边，脸完全露出来。背景是虚化的青色冰柜和暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：阿哲把手机贴在耳边，眼眶发红，嘴角慢慢弯起来。
+2–5.5 秒：他轻声说：&quot;Yeah. I&#x27;ll come home every month from now on.&quot;
+5.5–7.5 秒：他听着电话那头，轻轻点了点头。
+7.5–10 秒：他把手机从耳边拿下来，长长地呼出一口气。画面外的收银机传来一连串&quot;嘀、嘀、嘀&quot;，他转头看向画面右下方。
+他眼里有水光，但眼泪不要流下来。
+
+【声音】只有阿哲这一句英文台词。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。7.5 秒后有一连串画面外的&quot;嘀&quot;声。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里只有阿哲一个人，不要出现黑猫。画面里不要出现任何文字、数字、字幕、水印，小票和工牌保持空白。阿哲的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。手机屏幕始终不朝向镜头。</pre></details><p class="note"><b>后期由 Claude 加</b>后面接小票：21 被划掉，数字滚到 252。</p><p class="note"><b>发出去之前看一眼</b>是带着红眼眶的笑。</p><label class="tick"><input type="checkbox" id="done-14" data-seg="14"><span>这段已通过</span></label></article>
+<article class="card" id="s15"><div class="head"><h3><span class="no">15</span>小票垂到地上</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 2:12–2:16 · 约占一周额度 1.16%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>柜台图</li><li>黑猫设定图</li><li>道具图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-15" data-target="p-15">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-15">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是场景参考，柜台、收银机的位置和光线以它为准。图2 是黑猫的设定图。图3 是道具图，收银机和小票的造型以它为准。
+
+【镜头】全景，顾客一侧，机位比图1 略低，能看到柜台正面、淡紫色腰线和地砖。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–10 秒：收银机的出票口不停地往外吐空白小票。小票越过柜台边缘垂下来，一直垂到地砖上，在地上堆成软软的一小堆，还在继续变长。黑猫端坐在收银机右边，低头看着不断吐出来的小票，尾巴尖一下一下地晃。
+
+【声音】收银机连续不断的打印声。环境声：深夜便利店里冰柜的低鸣。没有人说话。不要背景音乐，不要旁白。
+
+【限制】画面里没有人。画面里不要出现任何文字、数字、字幕、水印，收银机屏幕和小票保持空白，猫的工牌上只有月牙图标。黑猫不张嘴、不出声，造型全程和设定图一致。</pre></details><p class="note"><b>后期由 Claude 加</b>不用加字。成片里会加速到 5 秒左右。</p><p class="note"><b>发出去之前看一眼</b>小票垂到了地上，上面没有冒字。</p><label class="tick"><input type="checkbox" id="done-15" data-seg="15"><span>这段已通过</span></label></article>
+<div class="act"><h3>五、尾声</h3></div>
+<article class="card" id="s16"><div class="head"><h3><span class="no">16</span>收费吗</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 2:16–2:26 · 约占一周额度 1.92%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>So... do you charge for this?</div><div class="zh">这个查询……收费吗？</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>合成定妆照</li><li>阿哲设定图</li><li>黑猫设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-16" data-target="p-16">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-16">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是场景和构图参考，机位、角色位置、道具位置、光线都以它为准。图2 是阿哲的设定图，图3 是黑猫的设定图，两个角色的长相、比例、服装和配饰全程和设定图一致。
+
+【镜头】中景，和图1 同一个机位。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–2 秒：阿哲把手机揣进卫衣口袋，用袖子抹了一下鼻子。
+2–5 秒：他看向右边的黑猫，带着一点鼻音，半开玩笑地问：&quot;So... do you charge for this?&quot;
+5–7 秒：黑猫盯着他看了两秒，一动不动。
+7–9 秒：黑猫慢慢抬起一只前爪，按在收银机的淡紫色大按键上。
+9–10 秒：收银机&quot;嘀&quot;了一声，出票口吐出一小截空白小票。
+
+【声音】只有阿哲这一句英文台词。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。9 秒处有一声&quot;嘀&quot;和很短的打印声。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印。小票、收银机屏幕、阿哲的工牌都保持空白，猫的工牌上只有月牙图标。黑猫不说话、不张嘴。角色的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>后面接小票：泡面 6.5 元 · 未支付。</p><p class="note"><b>发出去之前看一眼</b>是猫自己用爪子按的按键。</p><label class="tick"><input type="checkbox" id="done-16" data-seg="16"><span>这段已通过</span></label></article>
+<article class="card" id="s17"><div class="head"><h3><span class="no">17</span>行</h3><div class="tags"><span class="tag m25">Seedance 2.5</span><span class="tag plain">5 秒</span></div></div><p class="where">成片位置 2:30–2:34 · 约占一周额度 0.96%</p><div class="says"><div class="say"><div class="en"><span class="who">阿哲</span>Fair enough.</div><div class="zh">行。</div></div></div><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>阿哲近景（补充图 3）</li><li>阿哲设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-17" data-target="p-17">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-17">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.5（不要用 2.0 Fast）。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是构图参考，景别、背景、光线都以它为准。图2 是阿哲的设定图，长相、比例、服装以它为准。
+
+【镜头】近景，阿哲胸部以上，面向画面右侧的四分之三侧脸，背景是虚化的青色冰柜和暖色货架。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–1.5 秒：阿哲低头看着手里一张短短的空白小票，愣了一下。
+1.5–3.5 秒：他忍不住笑出了声，摇着头说：&quot;Fair enough.&quot;
+3.5–5 秒：他笑着把小票折了一下，塞进卫衣口袋。
+他的眼眶还有一点红，但表情是轻松的。
+
+【声音】只有阿哲这一句英文台词，带着笑。阿哲的声音：30 岁左右的男声，声音偏低、略带沙哑、语速偏慢，疲惫但克制，美式英语。环境声：深夜便利店里冰柜的低鸣。不要背景音乐，不要旁白。
+
+【限制】画面里只有阿哲一个人，不要出现黑猫。画面里不要出现任何文字、数字、字幕、水印，小票和工牌保持空白。阿哲的长相、比例、服装全程和设定图一致，不要多出手指，不要变形。</pre></details><p class="note"><b>后期由 Claude 加</b>只加字幕。</p><p class="note"><b>发出去之前看一眼</b>是真的笑出来了。</p><label class="tick"><input type="checkbox" id="done-17" data-seg="17"><span>这段已通过</span></label></article>
+<article class="card" id="s18"><div class="head"><h3><span class="no">18</span>出门</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">10 秒</span></div></div><p class="where">成片位置 2:34–2:44 · 约占一周额度 1.16%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>店外夜街</li><li>阿哲设定图</li><li>黑猫设定图</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-18" data-target="p-18">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-18">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 10 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是场景和构图参考，机位、店面、街道、光线都以它为准。图2 是阿哲的设定图，图3 是黑猫的设定图。
+
+【镜头】全景，和图1 同一个机位。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–3 秒：玻璃门被推开，阿哲一手提着泡面桶走出来，门在他身后慢慢合上。
+3–7 秒：他在月牙灯牌下面站住，掏出手机点了一下，把手机贴到耳边听。听着听着，他低下头笑了一下。
+7–10 秒：他把手机贴在耳边，沿着人行道朝画面左侧慢慢走远。橱窗里，黑猫端坐在柜台上，望着他离开的方向。
+
+【声音】门上的铃铛轻响一声，夜里空旷街道的环境声。没有人说话，听不到手机里的声音。不要背景音乐，不要旁白。
+
+【限制】画面里不要出现任何文字、数字、字幕、水印，月牙灯牌上没有字。街上没有其他人和车。阿哲和黑猫的造型和设定图一致。</pre></details><p class="note"><b>后期由 Claude 加</b>不用加字。</p><p class="note"><b>发出去之前看一眼</b>他是从门里走出来的，没有凭空出现。</p><label class="tick"><input type="checkbox" id="done-18" data-seg="18"><span>这段已通过</span></label></article>
+<article class="card" id="s19"><div class="head"><h3><span class="no">19</span>猫在橱窗</h3><div class="tags"><span class="tag ">2.0 Fast</span><span class="tag plain">5 秒</span></div></div><p class="where">成片位置 2:44–2:48 · 约占一周额度 0.58%</p><div class="refs"><span class="lbl">按这个顺序上传参考图</span><ol><li>黑猫设定图</li><li>店外夜街</li></ol></div><div class="copyrow"><button type="button" class="copy" id="btn-p-19" data-target="p-19">复制提示词</button><span class="state" aria-live="polite"></span></div><details><summary>看提示词全文</summary><pre id="p-19">请直接用下面的提示词生成视频，不要改写、不要拆分、不要先出方案。
+
+【参数】横屏 16:9，时长 5 秒，分辨率 720p，带声音。视频模型用 Seedance 2.0 Fast。
+
+【风格】3D 卡通动画电影质感，和参考图完全一致：大头的卡通角色、柔和的暖色室内光、窗外冷蓝夜色、浅景深。不要变成真人或写实风格。
+
+【参考图】图1 是黑猫的设定图，造型以它为准。图2 是场景参考，店面、橱窗和光线以它为准。
+
+【镜头】近景，从店外隔着橱窗玻璃拍黑猫。镜头完全固定，不推、不拉、不摇、不移，不要切镜头。
+
+【动作】
+0–5 秒：黑猫端坐在橱窗后面，暖黄色的店内灯光从它身后照过来，玻璃上映着街灯和淡紫色月牙灯牌的倒影。它望着画面左侧，慢慢眨了一下眼，尾巴尖轻轻卷了一下，然后转回头，面无表情地直视镜头。
+
+【声音】隔着玻璃，很安静，只有夜里街道的环境声。没有人说话。不要背景音乐，不要旁白。
+
+【限制】画面里没有人。画面里不要出现任何文字、数字、字幕、水印，收银机屏幕和小票保持空白，猫的工牌上只有月牙图标。黑猫不张嘴、不出声，造型全程和设定图一致。</pre></details><p class="note"><b>后期由 Claude 加</b>后面接片尾卡。</p><p class="note"><b>发出去之前看一眼</b>最后一秒猫在看镜头。</p><label class="tick"><input type="checkbox" id="done-19" data-seg="19"><span>这段已通过</span></label></article>
+</section>
+<section id="text"><h2>画面里的字</h2><p class="sub">这些字 Seedance 不生成，由 Claude 后期加到空白的屏幕和小票上，数字放大。</p><div class="card"><div class="pairs">
+<div class="pair"><div class="tagline">屏幕 · 0:00</div><div class="en">CHECK YOUR BALANCE?</div><div class="zh">是否查询余额？</div></div>
+<div class="pair"><div class="tagline">小票 1 · 0:04</div><div class="en">SALARY · BALANCE ¥213.50</div><div class="zh">本月工资 · 余额 213.50 元</div></div>
+<div class="pair"><div class="tagline">小票 2 · 0:19</div><div class="en">HAIR · BALANCE 71%</div><div class="zh">头发 · 余额 71%</div></div>
+<div class="pair"><div class="tagline">小票 3 · 0:26</div><div class="en">ALL-NIGHTERS · 302 LEFT</div><div class="zh">还能熬的夜 · 剩余 302 个</div></div>
+<div class="pair"><div class="tagline">小票 4 · 0:34</div><div class="en">UNHEARD VOICE MESSAGES · 3 (ALL FROM: MOM)</div><div class="zh">未读语音 · 3 条（全部来自：妈妈）</div></div>
+<div class="pair"><div class="tagline">小票 5 · 0:40</div><div class="en">“LATER” · OVERDRAWN</div><div class="zh">“回头” · 额度已透支</div></div>
+<div class="pair"><div class="tagline">小票 6 · 0:56</div><div class="en">DINNERS AT HOME · 21 LEFT</div><div class="zh">回家吃饭 · 剩余 21 次</div></div>
+<div class="pair"><div class="tagline">小票 7 · 1:08</div><div class="en">MOM IS 60 / ABOUT 21 YEARS LEFT, ON AVERAGE / YOU WENT HOME 3 TIMES IN 3 YEARS / 21 YEARS × 1 A YEAR = 21</div><div class="zh">妈妈今年 60 岁 / 平均还有约 21 年 / 你近三年回家 3 次 / 21 年 × 每年 1 次 = 21 次</div></div>
+<div class="pair"><div class="tagline">小票 8 · 1:22</div><div class="en">(100 − 60) × 1 = 40</div><div class="zh">（100 − 60）× 1 = 40</div></div>
+<div class="pair"><div class="tagline">小票 9 · 2:06</div><div class="en">DINNERS AT HOME · 21 → 252 LEFT</div><div class="zh">回家吃饭 · 21 划掉，滚到 252（21 年 × 每年 12 次）</div></div>
+<div class="pair"><div class="tagline">小票 10 · 2:26</div><div class="en">INSTANT NOODLES ¥6.50 · UNPAID</div><div class="zh">泡面 6.5 元 · 未支付</div></div>
+<div class="pair"><div class="tagline">片尾卡 · 2:48</div><div class="en">Most balances in life only go down. This one, you can top up yourself.</div><div class="zh">人生的余额大多只减不增。这一项，可以自己充值。</div></div>
+</div></div><p class="sub">小票 7 里的 21 年出自联合国《世界人口展望 2024》的中国生命表：60 岁时平均余寿约 21 年，是男女合计的数字。</p></section>
+<section id="lines"><h2>台词</h2><p class="sub">英文是配音，中文是字幕。字幕英文小、在上，中文大、在下。</p><div class="card"><div class="pairs">
+<div class="pair"><div class="tagline">1 · 阿哲 · 第 02 段</div><div class="en">...Don&#x27;t remind me.</div><div class="zh">……不用提醒。</div></div>
+<div class="pair"><div class="tagline">2 · 阿哲 · 第 02 段</div><div class="en">What kind of balance is this machine even checking?</div><div class="zh">你们这机器，查的是哪门子余额？</div></div>
+<div class="pair"><div class="tagline">3 · 阿哲 · 第 04 段</div><div class="en">You keep track of that, too?</div><div class="zh">这也归你们管？</div></div>
+<div class="pair"><div class="tagline">4 · 阿哲 · 第 04 段</div><div class="en">That many? Then I&#x27;m good for another year.</div><div class="zh">这么多？那我还能再干一年。</div></div>
+<div class="pair"><div class="tagline">5 · 阿哲 · 第 05 段</div><div class="en">...Later.</div><div class="zh">……回头听。</div></div>
+<div class="pair"><div class="tagline">6 · 阿哲 · 第 05 段</div><div class="en">Okay. Rude.</div><div class="zh">行了，嘴挺损。</div></div>
+<div class="pair"><div class="tagline">7 · 阿哲 · 第 09 段</div><div class="en">Twenty-one what?</div><div class="zh">什么 21 次？</div></div>
+<div class="pair"><div class="tagline">8 · 阿哲 · 第 10 段</div><div class="en">No way. My mom&#x27;s healthy. She&#x27;ll live to a hundred.</div><div class="zh">不可能，我妈身体好着呢，她能活到一百岁。</div></div>
+<div class="pair"><div class="tagline">9 · 阿哲 · 第 10 段</div><div class="en">...Forty dinners.</div><div class="zh">……四十顿。</div></div>
+<div class="pair"><div class="tagline">10 · 妈妈 · 第 12 段</div><div class="en">Hello? Why are you calling so late? Is something wrong?</div><div class="zh">喂？怎么这么晚打电话，出什么事了？</div></div>
+<div class="pair"><div class="tagline">11 · 阿哲 · 第 13 段</div><div class="en">Nothing. ...Mom, I&#x27;m coming home for dinner this weekend.</div><div class="zh">没事。……妈，这周末我回去吃饭。</div></div>
+<div class="pair"><div class="tagline">12 · 妈妈 · 第 13 段</div><div class="en">...Then I&#x27;ll go buy ribs tomorrow.</div><div class="zh">……那我明天去买排骨。</div></div>
+<div class="pair"><div class="tagline">13 · 阿哲 · 第 14 段</div><div class="en">Yeah. I&#x27;ll come home every month from now on.</div><div class="zh">嗯。以后我每个月都回。</div></div>
+<div class="pair"><div class="tagline">14 · 阿哲 · 第 16 段</div><div class="en">So... do you charge for this?</div><div class="zh">这个查询……收费吗？</div></div>
+<div class="pair"><div class="tagline">15 · 阿哲 · 第 17 段</div><div class="en">Fair enough.</div><div class="zh">行。</div></div>
+</div></div></section>
+<section id="music"><h2>配乐</h2>
+<ul class="plain">
+<li>0:00 到 0:56 不放音乐，只有便利店的环境声。</li>
+<li>0:56 "剩余 21 次"那张小票出来时，钢琴进一个长音。</li>
+<li>打电话中间那两秒停顿，音乐停。</li>
+<li>妈妈说"买排骨"时主题进来，数字滚到 252 时推到最高，之后回到钢琴独奏，在片尾卡上收住。</li>
+</ul>
+<p class="sub">用你手上的 AI 音乐工具生成两三条纯音乐，挑你听着最对的发给 Claude，按画面剪进去。中文工具用第一段，英文工具用第二段。</p>
+<article class="card"><div class="head"><h3>音乐提示词（中文）</h3></div><div class="copyrow"><button type="button" class="copy" id="btn-music-zh" data-target="music-zh">复制</button><span class="state" aria-live="polite"></span></div><details><summary>看全文</summary><pre id="music-zh">纯音乐，没有人声。温暖克制的电影配乐。主奏是柔和的毡毛钢琴，后段加入轻柔的弦乐铺底和一点点钢片琴。速度约 70 BPM，4/4 拍，大调。主题是一个简单、像摇篮曲的四音动机，不断重复、慢慢变厚。结构：前 40 秒只有稀疏的钢琴单音，留很多空白；40 到 80 秒主题完整出现，弦乐慢慢进来；80 到 100 秒推到最温暖的高点，不要鼓，不要煽情；最后 30 秒回到钢琴独奏，轻轻收住。总长 2 分钟左右。情绪：深夜、安静、想家、释然。</pre></details></article>
+<article class="card"><div class="head"><h3>音乐提示词（英文）</h3></div><div class="copyrow"><button type="button" class="copy" id="btn-music-en" data-target="music-en">复制</button><span class="state" aria-live="polite"></span></div><details><summary>看全文</summary><pre id="music-en">Instrumental only, no vocals. Warm, restrained film score. Soft felt piano lead, a gentle string pad entering later, a touch of celesta. About 70 BPM, 4/4, major key. A simple lullaby-like four-note motif that repeats and slowly thickens. Structure: first 40 seconds sparse single piano notes with lots of space; 40 to 80 seconds the full theme, strings easing in; 80 to 100 seconds the warmest peak, no drums, not melodramatic; final 30 seconds back to solo piano, ending softly. About 2 minutes long. Mood: late night, quiet, homesick, relieved.</pre></details></article>
+</section>
+<section id="budget"><h2>额度</h2>
+<p class="sub">按 11 月 14 日实测：10 秒的 Seedance 2.5 占一周额度 1.92%，2.0 Fast 占 1.16%。5 秒的段按一半估，这一点还没实测。</p>
+<div class="card"><div class="scroll"><table>
+<thead><tr><th>范围</th><th>只拍一遍</th><th>平均拍 2.5 遍</th></tr></thead>
+<tbody>
+<tr><td>第 01–11 段（开场到转折）</td><td class="n">13.1%</td><td class="n">33%</td></tr>
+<tr><td>第 12–19 段（高潮和尾声）</td><td class="n">11.5%</td><td class="n">29%</td></tr>
+<tr><td>全片</td><td class="n">24.6%</td><td class="n">62%</td></tr>
+</tbody></table></div></div>
+<p class="sub">提示词里现在都写的是 720p。想要 1080p，先把第 02 段用 1080p 拍一遍，看额度涨多少再定。</p>
+<p class="sub">建议分两周拍：11 月 18 日 09:07 额度重置前拍第 01–11 段，重置后拍第 12–19 段。重置那天赠送套餐到期，后半部同样的量会贵两成左右，这是按套餐倍数推算的。</p></section>
+<section id="send"><h2>怎么把文件发给 Claude</h2>
+<ul class="plain">
+<li>从豆包下载视频后，先存到"文件"App，再当文件发。走相册会被压缩，三条样片都只剩 0.5 MB 左右。</li>
+<li>一段拍了几遍，就把你觉得最好的那一遍发来，并说一句是第几段。</li>
+<li>Claude 听不到声音。台词有没有说对、镜头有没有动可以测出来，嗓音好不好听要靠你判断。</li>
+</ul></section>
+</div>
+<script>
+(function(){
+  var KEY = 'balance-shotlist-v1';
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; } }
+  function save(o){ try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+  var st = load();
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-seg]'));
+  function paint(){
+    var n = 0;
+    boxes.forEach(function(b){
+      var on = !!st[b.getAttribute('data-seg')]; b.checked = on;
+      var card = b.closest('.card'); if (card) card.classList.toggle('is-done', on);
+      if (on) n++;
+    });
+    var out = document.getElementById('done-n'); if (out) out.textContent = n;
+    var bar = document.getElementById('done-bar'); if (bar) bar.style.width = (boxes.length ? n / boxes.length * 100 : 0) + '%';
+  }
+  boxes.forEach(function(b){ b.addEventListener('change', function(){ st[b.getAttribute('data-seg')] = b.checked; save(st); paint(); }); });
+  paint();
+  document.addEventListener('click', function(ev){
+    var btn = ev.target.closest ? ev.target.closest('button.copy') : null; if (!btn) return;
+    var pre = document.getElementById(btn.getAttribute('data-target')); if (!pre) return;
+    var state = btn.parentNode.querySelector('.state'); var text = pre.textContent;
+    function ok(){ btn.classList.add('ok'); if (state) state.textContent = '已复制'; setTimeout(function(){ btn.classList.remove('ok'); if (state) state.textContent = ''; }, 2200); }
+    function fallback(){
+      var d = pre.closest('details'); if (d) d.open = true;
+      try { var r = document.createRange(); r.selectNodeContents(pre); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e) {}
+      if (state) state.textContent = '已选中全文，请长按选"拷贝"';
+      try { pre.scrollIntoView({block: 'center'}); } catch (e) {}
+    }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(ok, fallback); } else { fallback(); } } catch (e) { fallback(); }
+  });
+})();
+</script>
